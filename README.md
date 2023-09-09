@@ -18,4 +18,30 @@ The setup only uses iptables to achieve NAT-ing.
 docker compose build && docker compose up
 ```
 
+## Validating the Setup
 
+### Using ping
+
+Open a shell on one of the clients:
+```bash
+docker exec -it client /bin/bash
+```
+
+Then ping the server:
+```bash
+ping server
+```
+
+This works since the NAT is translating addresses from the internal network to the outside world.
+
+Conversely, trying to ping the client from the server does not work, as we'd expect.
+
+Open a shell on one of the server:
+```bash
+docker exec -it server /bin/bash
+```
+
+And try to ping the client:
+```bash
+ping 192.168.0.100
+```
