@@ -6,14 +6,14 @@ services:
     container_name: router
     environment:
       IPTABLES: "iptables-legacy"
-      SUBNET_INTERNAL: "193.167.0.0/16" # must be the same as configured in the networks section
-      ADDR_EXTERNAL: "191.169.0.42" # must be the same as configured in the networks section
+      SUBNET_INTERNAL: "192.168.0.0/16" # must be the same as configured in the networks section
+      ADDR_EXTERNAL: "10.0.0.42" # must be the same as configured in the networks section
     networks:
       behindnat:
-        ipv4_address: 193.167.0.42
+        ipv4_address: 192.168.0.42
         # mac_address: 02:42:ac:13:37:05
       beyondnat:
-        ipv4_address: 191.169.0.42
+        ipv4_address: 10.0.0.42
     cap_add: 
       - NET_ADMIN # needed to set the iptables rule
   server: # the host sitting on the "public internet"
@@ -21,31 +21,31 @@ services:
     container_name: server
     networks:
       beyondnat:
-        ipv4_address: 191.169.0.100
+        ipv4_address: 10.0.0.100
   client: # the host that's sitting behind the router
     build: ./host
     container_name: client
     environment:
-      ROUTER: "193.167.0.42"
-      SUBNET: "191.169.0.0/16"
+      ROUTER: "192.168.0.42"
+      SUBNET: "10.0.0.0/16"
     networks:
       behindnat:
-        ipv4_address: 193.167.0.100
+        ipv4_address: 192.168.0.100
     extra_hosts:
-      - "server:191.169.0.100"
+      - "server:10.0.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   client2: # the host that's sitting behind the router
     build: ./host
     container_name: client2
     environment:
-      ROUTER: "193.167.0.42"
-      SUBNET: "191.169.0.0/16"
+      ROUTER: "192.168.0.42"
+      SUBNET: "10.0.0.0/16"
     networks:
       behindnat:
-        ipv4_address: 193.167.0.101
+        ipv4_address: 192.168.0.101
     extra_hosts:
-      - "server:191.169.0.100"
+      - "server:10.0.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   
@@ -53,9 +53,9 @@ networks:
   behindnat:
     ipam:
       config:
-        - subnet: 193.167.0.0/16
+        - subnet: 192.168.0.0/16
   beyondnat:
     ipam:
       config:
-        - subnet: 191.169.0.0/16
+        - subnet: 10.0.0.0/16
   
