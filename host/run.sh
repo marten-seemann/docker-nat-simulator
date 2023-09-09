@@ -10,5 +10,7 @@ if [ -n "$ROUTER" ]; then
     ip route add $SUBNET via $ROUTER dev eth0
 fi
 
+tcpdump -i eth0 -n -w /dump.pcap &
+
 # sleep
 tail -f /dev/null
