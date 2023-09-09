@@ -9,8 +9,8 @@ The setup only uses iptables to achieve NAT-ing.
 <img title="Network Setup" src="network.png">
 
 * The clients (192.168.0.0/16) are in a network that's assumed to be separate from the rest of the network by a NAT.
-* The server (10.0.0.100) is on the other side of the NAT.
-* The router (192.168.0.42 and 10.0.0.42, respectively) acts as a NAT between these two networks.
+* The server (17.0.0.100) is on the other side of the NAT. We intentionally use a public IP (see RFC 1918) here.
+* The router (192.168.0.42 and 17.0.0.42, respectively) acts as a NAT between these two networks.
 
 ## Running
 
@@ -69,7 +69,7 @@ Now in a separate terminal, open a shell on the first client, and establish a co
 ncat -v -p 45678 server 80
 ```
 
-On the server side, we now see an incoming connection originating from 10.0.0.42:45678. It makes sense that we see the connection originating from the router (that's exacty what a NAT is supposed to do). It looks like iptables chose to preserve the port number.
+On the server side, we now see an incoming connection originating from 17.0.0.42:45678. It makes sense that we see the connection originating from the router (that's exacty what a NAT is supposed to do). It looks like iptables chose to preserve the port number.
 
 To check that the NAT functions correctly, open a shell on the second client (`client2`), and establish another connection to the server, using the same source port:
 ```bash

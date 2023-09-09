@@ -7,13 +7,12 @@ services:
     environment:
       IPTABLES: "iptables-legacy"
       SUBNET_INTERNAL: "192.168.0.0/16" # must be the same as configured in the networks section
-      ADDR_EXTERNAL: "10.0.0.42" # must be the same as configured in the networks section
+      ADDR_EXTERNAL: "17.0.0.42" # must be the same as configured in the networks section
     networks:
       behindnat:
         ipv4_address: 192.168.0.42
-        # mac_address: 02:42:ac:13:37:05
       beyondnat:
-        ipv4_address: 10.0.0.42
+        ipv4_address: 17.0.0.42
     cap_add: 
       - NET_ADMIN # needed to set the iptables rule
   server: # the host sitting on the "public internet"
@@ -21,18 +20,18 @@ services:
     container_name: server
     networks:
       beyondnat:
-        ipv4_address: 10.0.0.100
+        ipv4_address: 17.0.0.100
   client: # the host that's sitting behind the router
     build: ./host
     container_name: client
     environment:
       ROUTER: "192.168.0.42"
-      SUBNET: "10.0.0.0/16"
+      SUBNET: "17.0.0.0/16"
     networks:
       behindnat:
         ipv4_address: 192.168.0.100
     extra_hosts:
-      - "server:10.0.0.100"
+      - "server:17.0.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   client2: # the host that's sitting behind the router
@@ -40,12 +39,12 @@ services:
     container_name: client2
     environment:
       ROUTER: "192.168.0.42"
-      SUBNET: "10.0.0.0/16"
+      SUBNET: "17.0.0.0/16"
     networks:
       behindnat:
         ipv4_address: 192.168.0.101
     extra_hosts:
-      - "server:10.0.0.100"
+      - "server:17.0.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   
@@ -57,5 +56,4 @@ networks:
   beyondnat:
     ipam:
       config:
-        - subnet: 10.0.0.0/16
-  
+        - subnet: 17.0.0.0/16
