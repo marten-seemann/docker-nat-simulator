@@ -46,6 +46,15 @@ And try to ping the client:
 ping 192.168.0.100
 ```
 
+#### Simulating a network delay
+
+Open a shell on the router (`router`) and add a delay:
+```bash
+tc qdisc add dev eth0 root netem delay 50ms
+```
+
+Now ping the server again from the client container. It's not clear to me why this results in an RTT of 50ms (and not 100ms) though.
+
 ### Using `netcat`
 
 While the `ping` test shows that basic connectivity is as we'd expect, it doesn't prove that we've actually built a NAT. For that, we'll use `netcat`.
