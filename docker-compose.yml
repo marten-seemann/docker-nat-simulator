@@ -31,6 +31,8 @@ services:
     networks:
       behindnat:
         ipv4_address: 193.167.0.100
+    extra_hosts:
+      - "server:191.169.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   client2: # the host that's sitting behind the router
@@ -42,6 +44,8 @@ services:
     networks:
       behindnat:
         ipv4_address: 193.167.0.101
+    extra_hosts:
+      - "server:191.169.0.100"
     cap_add: 
       - NET_ADMIN # needed to set the route
   
