@@ -1,5 +1,8 @@
 # Docker NAT Simulator
 
+For a hole-punching example, see the [hole-punching branch](https://github.com/marten-seemann/docker-nat-simulator/tree/hole-punching).
+
+
 The logic is loosely based on https://github.com/zzJinux/docker-nat-simulate, but it replaces all bash scripts used for setup with a Docker compose setup.
 
 The setup only uses iptables to achieve NAT-ing.
