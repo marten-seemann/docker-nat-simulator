@@ -20,7 +20,7 @@ docker compose build && docker compose up
 
 ## Validating the Setup
 
-### Using ping
+### Using `ping`
 
 Open a shell on one of the clients:
 ```bash
@@ -45,3 +45,26 @@ And try to ping the client:
 ```bash
 ping 192.168.0.100
 ```
+
+### Using `netcat`
+
+While the `ping` test shows that basic connectivity is as we'd expect, it doesn't prove that we've actually built a NAT. For that, we'll use `netcat`.
+
+Open a shell on the server, and start a server:
+```bash
+ncat -vk -l 80 -c 'xargs -n1 echo Echo from the server: '
+```
+
+Now in a separate terminal, open a shell on the first client, and establish a connection to the server:
+```bash
+ncat -v -p 45678 server 80
+```
+
+On the server side, we now see an incoming connection originating from 10.0.0.42:45678. It makes sense that we see the connection originating from the router (that's exacty what a NAT is supposed to do). It looks like iptables chose to preserve the port number.
+
+To check that the NAT functions correctly, open a shell on the second client (`client2`), and establish another connection to the server, using the same source port:
+```bash
+ncat -v -p 45678 server 80
+```
+
+Now the NAT has no choice but to allocate a new port number, since both clients are using the same port. You should see an incoming connection on the server from a randomly allocated port number.
