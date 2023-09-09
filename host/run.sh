@@ -12,5 +12,5 @@ fi
 
 tcpdump -i eth0 -n -w /dump.pcap &
 
-# sleep
-tail -f /dev/null
+# run the libp2p node
+./node "$@"

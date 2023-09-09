@@ -1,59 +1,78 @@
 version: "3.5"
 
 services:
-  router:
+  router1:
     build: ./router
-    container_name: router
+    container_name: router1
     environment:
       IPTABLES: "iptables-legacy"
-      SUBNET_INTERNAL: "192.168.0.0/16" # must be the same as configured in the networks section
+      SUBNET_INTERNAL: "192.168.0.0/24" # must be the same as configured in the networks section
       ADDR_EXTERNAL: "17.0.0.42" # must be the same as configured in the networks section
     networks:
-      behindnat:
+      behindnat1:
         ipv4_address: 192.168.0.42
-      beyondnat:
+      theinternet:
         ipv4_address: 17.0.0.42
     cap_add: 
       - NET_ADMIN # needed to set the iptables rule
-  server: # the host sitting on the "public internet"
-    build: ./host
-    container_name: server
+  router2:
+    build: ./router
+    container_name: router2
+    environment:
+      IPTABLES: "iptables-legacy"
+      SUBNET_INTERNAL: "10.0.0.0/24" # must be the same as configured in the networks section
+      ADDR_EXTERNAL: "17.0.10.42" # must be the same as configured in the networks section
     networks:
-      beyondnat:
-        ipv4_address: 17.0.0.100
-  client: # the host that's sitting behind the router
+      behindnat2:
+        ipv4_address: 10.0.0.42
+      theinternet:
+        ipv4_address: 17.0.10.42
+    cap_add:
+      - NET_ADMIN # needed to set the iptables rule
+  relay: # a public node, acting as a libp2p relay
+    build: ./host
+    container_name: relay
+    networks:
+      theinternet:
+        ipv4_address: 17.0.13.37
+    entrypoint: [ "./scripts/run.sh", "relay" ]
+  client: # the host that's sitting behind router1
     build: ./host
     container_name: client
     environment:
       ROUTER: "192.168.0.42"
       SUBNET: "17.0.0.0/16"
+      GOLOG_LOG_LEVEL: "p2p-holepunch=debug"
     networks:
-      behindnat:
+      behindnat1:
         ipv4_address: 192.168.0.100
-    extra_hosts:
-      - "server:17.0.0.100"
-    cap_add: 
+    cap_add:
       - NET_ADMIN # needed to set the route
-  client2: # the host that's sitting behind the router
+    entrypoint: [ "./scripts/run.sh", "client", "17.0.13.37" ]
+  server: # the host that's sitting behind the router2
     build: ./host
-    container_name: client2
+    container_name: server
     environment:
-      ROUTER: "192.168.0.42"
+      ROUTER: "10.0.0.42"
       SUBNET: "17.0.0.0/16"
+      GOLOG_LOG_LEVEL: "p2p-holepunch=debug"
     networks:
-      behindnat:
-        ipv4_address: 192.168.0.101
-    extra_hosts:
-      - "server:17.0.0.100"
-    cap_add: 
+      behindnat2:
+        ipv4_address: 10.0.0.100
+    cap_add:
       - NET_ADMIN # needed to set the route
-  
+    entrypoint: [ "./scripts/run.sh", "server", "17.0.13.37" ]
+
 networks:
-  behindnat:
+  behindnat1:
     ipam:
       config:
-        - subnet: 192.168.0.0/16
-  beyondnat:
+        - subnet: 192.168.0.0/24
+  behindnat2:
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+  theinternet:
     ipam:
       config:
         - subnet: 17.0.0.0/16

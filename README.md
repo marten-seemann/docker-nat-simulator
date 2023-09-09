@@ -1,16 +1,17 @@
 # Docker NAT Simulator
 
-The logic is loosely based on https://github.com/zzJinux/docker-nat-simulate, but it replaces all bash scripts used for setup with a Docker compose setup.
+The setup is based on the simple Docker NAT Simulator in [the master branch](https://github.com/marten-seemann/docker-nat-simulator/tree/master).
 
-The setup only uses iptables to achieve NAT-ing.
+It sets up a network with two go-libp2p nodes behind their respective NATs, starts a public relay node and achieves a direct connection between the two NAT-ed nodes by coordinating a hole-punching using DCUtR.
 
 ## Network Setup
 
 <img title="Network Setup" src="network.png">
 
-* The clients (192.168.0.0/16) are in a network that's assumed to be separate from the rest of the network by a NAT.
-* The server (17.0.0.100) is on the other side of the NAT. We intentionally use a public IP (see RFC 1918) here.
-* The router (192.168.0.42 and 17.0.0.42, respectively) acts as a NAT between these two networks.
+* The first host ("the client") (192.168.0.100) is behind a NAT that has the public IP 17.0.0.42.
+* The second host ("the client") (10.0.0.100) is behind a NAT that has the public IP 17.0.10.42.
+* Both routers apply an RTT of 50ms, thus the end-to-end RTT is 100ms.
+* There's a (public) relay at 17.0.13.37.
 
 ## Running
 
@@ -18,62 +19,7 @@ The setup only uses iptables to achieve NAT-ing.
 docker compose build && docker compose up
 ```
 
-## Validating the Setup
-
-### Using `ping`
-
-Open a shell on one of the clients:
-```bash
-docker exec -it client /bin/bash
-```
-
-Then ping the server:
-```bash
-ping server
-```
-
-This works since the NAT is translating addresses from the internal network to the outside world.
-
-Conversely, trying to ping the client from the server does not work, as we'd expect.
-
-Open a shell on one of the server:
-```bash
-docker exec -it server /bin/bash
-```
-
-And try to ping the client:
-```bash
-ping 192.168.0.100
-```
-
-#### Simulating a network delay
-
-Open a shell on the router (`router`) and add a delay:
-```bash
-tc qdisc add dev eth0 root netem delay 50ms
-```
-
-Now ping the server again from the client container. It's not clear to me why this results in an RTT of 50ms (and not 100ms) though.
-
-### Using `netcat`
-
-While the `ping` test shows that basic connectivity is as we'd expect, it doesn't prove that we've actually built a NAT. For that, we'll use `netcat`.
-
-Open a shell on the server, and start a server:
-```bash
-ncat -vk -l 80 -c 'xargs -n1 echo Echo from the server: '
-```
-
-Now in a separate terminal, open a shell on the first client, and establish a connection to the server:
-```bash
-ncat -v -p 45678 server 80
-```
-
-On the server side, we now see an incoming connection originating from 17.0.0.42:45678. It makes sense that we see the connection originating from the router (that's exacty what a NAT is supposed to do). It looks like iptables chose to preserve the port number.
-
-To check that the NAT functions correctly, open a shell on the second client (`client2`), and establish another connection to the server, using the same source port:
-```bash
-ncat -v -p 45678 server 80
-```
-
-Now the NAT has no choice but to allocate a new port number, since both clients are using the same port. You should see an incoming connection on the server from a randomly allocated port number.
+Future Work:
+* This test is flaky! In many runs, the hole punch fails. From the packet captures, it looks like sometimes the TCP stream is getting reset, but I'm not sure who's doing that. We'll need to debug this.
+* This example currently only works on TCP. This is most likely because the `iptables` command only applies to TCP, we'll need to figure out how to use `iptables` for a UDP NAT.
+* The (go-libp2p) hole punching service requires nodes to discover their public-facing IP address. This is currently done by connecting to the relay. This is fine for the client, since the client requires a reservation with the relay anyway. For the server, it would be nicer if it didn't have to contact the relay before starting the hole punch attempt. This could be achieved by connecting to another public node.
