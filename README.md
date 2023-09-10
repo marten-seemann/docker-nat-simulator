@@ -20,6 +20,5 @@ docker compose build && docker compose up
 ```
 
 Future Work:
-* This test is flaky! In many runs, the hole punch fails. From the packet captures, it looks like sometimes the TCP stream is getting reset, but I'm not sure who's doing that. We'll need to debug this.
 * This example currently only works on TCP. This is most likely because the `iptables` command only applies to TCP, we'll need to figure out how to use `iptables` for a UDP NAT.
 * The (go-libp2p) hole punching service requires nodes to discover their public-facing IP address. This is currently done by connecting to the relay. This is fine for the client, since the client requires a reservation with the relay anyway. For the server, it would be nicer if it didn't have to contact the relay before starting the hole punch attempt. This could be achieved by connecting to another public node.
